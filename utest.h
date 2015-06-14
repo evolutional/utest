@@ -64,6 +64,11 @@ typedef struct _utest_entry
 	const char* file;
 	const int line;
 
+#ifdef __cplusplus
+	_utest_entry() : name(0), test(0), file(0), line(0) {}
+	_utest_entry(const char* a, _utest_func b, const char* c, const int d) : name(a), test(b), file(c), line(d) {}
+#endif
+
 } utest_entry;
 
 typedef struct _utest_fixture
@@ -175,6 +180,9 @@ extern void utest_set_user(void*);
 // Test specs
 #define TEST(test_name)	\
 	void test_name()
+
+#define DECLARE_TEST(test_name)	\
+	void test_name();
 
 #define TEST_FIXTURE_BEGIN_F(fixture_name, setup, teardown)	\
 static utest_fixture fixture_name = { #fixture_name, setup, teardown, {
