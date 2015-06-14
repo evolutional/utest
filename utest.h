@@ -116,6 +116,7 @@ extern utest_test_result utest_run_test(utest_entry* test);
 extern void utest_assert_integer_equal(signed expected, signed actual, const char* message);
 extern void utest_assert_float_equal(double expected, double actual, double epsilon, const char* message);
 extern void utest_assert_string_equal(const char* expected, const char* actual, const char* message, char ignore_case);
+extern void utest_assert_pointer_equal(void* expected, void* actual, const char* message);
 
 extern void utest_fail(const char* format, ...);
 
@@ -137,38 +138,38 @@ extern void utest_set_user(void*);
 
 #define TEST_ASSERT(expr)		TEST_ASSERT_MESSAGE(expr, "Expression is false")
 
-#define TEST_ASSERT_EQUAL_I(type, expected, actual)	utest_assert_integer_equal((type)expected, (type)actual, 0)
-#define TEST_ASSERT_EQUAL_F(type, expected, actual, epsilon)	utest_assert_float_equal((type)expected, (type)actual, epsilon, 0)
+#define TEST_ASSERT_EQUAL_P(expected, actual, message)	utest_assert_pointer_equal(expected, actual, message)
+#define TEST_ASSERT_EQUAL_I(type, expected, actual, message)	utest_assert_integer_equal((type)expected, (type)actual, message)
+#define TEST_ASSERT_EQUAL_F(type, expected, actual, epsilon, message)	utest_assert_float_equal((type)expected, (type)actual, epsilon, message)
 
-#define TEST_ASSERT_EQUAL_INT8(expected, actual)	TEST_ASSERT_EQUAL_I(int8_t, expected, actual)
-#define TEST_ASSERT_EQUAL_INT16(expected, actual)	TEST_ASSERT_EQUAL_I(int16_t, expected, actual)
-#define TEST_ASSERT_EQUAL_INT32(expected, actual)	TEST_ASSERT_EQUAL_I(int32_t, expected, actual)
-#define TEST_ASSERT_EQUAL_INT64(expected, actual)	TEST_ASSERT_EQUAL_I(int64_t, expected, actual)
+#define TEST_ASSERT_EQUAL_INT8(expected, actual)	TEST_ASSERT_EQUAL_I(int8_t, expected, actual, 0)
+#define TEST_ASSERT_EQUAL_INT16(expected, actual)	TEST_ASSERT_EQUAL_I(int16_t, expected, actual, 0)
+#define TEST_ASSERT_EQUAL_INT32(expected, actual)	TEST_ASSERT_EQUAL_I(int32_t, expected, actual, 0)
+#define TEST_ASSERT_EQUAL_INT64(expected, actual)	TEST_ASSERT_EQUAL_I(int64_t, expected, actual, 0)
 
-#define TEST_ASSERT_EQUAL_UINT8(expected, actual)	TEST_ASSERT_EQUAL_I(uint8_t, expected, actual)
-#define TEST_ASSERT_EQUAL_UINT16(expected, actual)	TEST_ASSERT_EQUAL_I(uint16_t, expected, actual)
-#define TEST_ASSERT_EQUAL_UINT32(expected, actual)	TEST_ASSERT_EQUAL_I(uint32_t, expected, actual)
-#define TEST_ASSERT_EQUAL_UINT64(expected, actual)	TEST_ASSERT_EQUAL_I(uint64_t, expected, actual)
+#define TEST_ASSERT_EQUAL_UINT8(expected, actual)	TEST_ASSERT_EQUAL_I(uint8_t, expected, actual, 0)
+#define TEST_ASSERT_EQUAL_UINT16(expected, actual)	TEST_ASSERT_EQUAL_I(uint16_t, expected, actual, 0)
+#define TEST_ASSERT_EQUAL_UINT32(expected, actual)	TEST_ASSERT_EQUAL_I(uint32_t, expected, actual, 0)
+#define TEST_ASSERT_EQUAL_UINT64(expected, actual)	TEST_ASSERT_EQUAL_I(uint64_t, expected, actual, 0)
 
-#define TEST_ASSERT_EQUAL_FLOAT(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(float, expected, actual, epsilon)
-#define TEST_ASSERT_EQUAL_DOUBLE(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(double, expected, actual, epsilon)
+#define TEST_ASSERT_EQUAL_PTR(expected, actual)				TEST_ASSERT_EQUAL_P(expected, actual, 0)
+#define TEST_ASSERT_EQUAL_PTR_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_P(expected, actual, message)
 
+#define TEST_ASSERT_EQUAL_FLOAT(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(float, expected, actual, epsilon, 0)
+#define TEST_ASSERT_EQUAL_DOUBLE(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(double, expected, actual, epsilon, 0)
 
-#define TEST_ASSERT_EQUAL_I_MESSAGE(type, expected, actual, message)	utest_assert_integer_equal((type)expected, (type)actual, message)
-#define TEST_ASSERT_EQUAL_F_MESSAGE(type, expected, actual, epsilon, message)	utest_assert_float_equal((type)expected, (type)actual, epsilon, message)
+#define TEST_ASSERT_EQUAL_INT8_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int8_t, expected, actual, message)
+#define TEST_ASSERT_EQUAL_INT16_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int16_t, expected, actual, message)
+#define TEST_ASSERT_EQUAL_INT32_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int32_t, expected, actual, message)
+#define TEST_ASSERT_EQUAL_INT64_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int64_t, expected, actual, message)
 
-#define TEST_ASSERT_EQUAL_INT8_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(int8_t, expected, actual, message)
-#define TEST_ASSERT_EQUAL_INT16_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(int16_t, expected, actual, message)
-#define TEST_ASSERT_EQUAL_INT32_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(int32_t, expected, actual, message)
-#define TEST_ASSERT_EQUAL_INT64_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(int64_t, expected, actual, message)
+#define TEST_ASSERT_EQUAL_UINT8_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(uint8_t, expected, actual, message)
+#define TEST_ASSERT_EQUAL_UINT16_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(uint16_t, expected, actual, message)
+#define TEST_ASSERT_EQUAL_UINT32_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(uint32_t, expected, actual, message)
+#define TEST_ASSERT_EQUAL_UINT64_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(uint64_t, expected, actual, message)
 
-#define TEST_ASSERT_EQUAL_UINT8_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(uint8_t, expected, actual, message)
-#define TEST_ASSERT_EQUAL_UINT16_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(uint16_t, expected, actual, message)
-#define TEST_ASSERT_EQUAL_UINT32_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(uint32_t, expected, actual, message)
-#define TEST_ASSERT_EQUAL_UINT64_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I_MESSAGE(uint64_t, expected, actual, message)
-
-#define TEST_ASSERT_EQUAL_FLOAT_MESSAGE(expected, actual, epsilon, message)	TEST_ASSERT_EQUAL_F_MESSAGE(float, expected, actual, epsilon, message)
-#define TEST_ASSERT_EQUAL_DOUBLE_MESSAGE(expected, actual, epsilon, message)	TEST_ASSERT_EQUAL_F_MESSAGE(double, expected, actual, epsilon, message)
+#define TEST_ASSERT_EQUAL_FLOAT_MESSAGE(expected, actual, epsilon, message)	TEST_ASSERT_EQUAL_F(float, expected, actual, epsilon, message)
+#define TEST_ASSERT_EQUAL_DOUBLE_MESSAGE(expected, actual, epsilon, message)	TEST_ASSERT_EQUAL_F(double, expected, actual, epsilon, message)
 
 #define TEST_ASSERT_EQUAL_NOCASE_STRING_MESSAGE(expected, actual, message)		utest_assert_string_equal(expected, actual, message, 1)
 #define TEST_ASSERT_EQUAL_NOCASE_STRING(expected, actual)		TEST_ASSERT_EQUAL_NOCASE_STRING_MESSAGE(expected, actual, 0)
@@ -339,6 +340,23 @@ void utest_assert_string_equal(const char* expected, const char* actual, const c
 	else
 	{
 		utest_fail("Strings not equal. Expected [%s], Actual [%s]", expected, actual);
+	}
+}
+
+void utest_assert_pointer_equal(void* expected, void* actual, const char* message)
+{
+	if (expected == actual)
+	{
+		return;
+	}
+
+	if (message)
+	{
+		utest_fail("Pointers not equal. Expected [0x%016x], Actual [0x%016x] - %s", expected, actual, message);
+	}
+	else
+	{
+		utest_fail("Pointers not equal. Expected [0x%016x], Actual [0x%016x]", expected, actual);
 	}
 }
 
