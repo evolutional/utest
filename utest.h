@@ -142,11 +142,13 @@ extern void utest_set_user(void*);
 #define TEST_ASSERT_EQUAL_I(type, expected, actual, message)	utest_assert_integer_equal((type)expected, (type)actual, message)
 #define TEST_ASSERT_EQUAL_F(type, expected, actual, epsilon, message)	utest_assert_float_equal((type)expected, (type)actual, epsilon, message)
 
+#define TEST_ASSERT_EQUAL_INT(expected, actual)		TEST_ASSERT_EQUAL_I(signed int, expected, actual, 0)
 #define TEST_ASSERT_EQUAL_INT8(expected, actual)	TEST_ASSERT_EQUAL_I(int8_t, expected, actual, 0)
 #define TEST_ASSERT_EQUAL_INT16(expected, actual)	TEST_ASSERT_EQUAL_I(int16_t, expected, actual, 0)
 #define TEST_ASSERT_EQUAL_INT32(expected, actual)	TEST_ASSERT_EQUAL_I(int32_t, expected, actual, 0)
 #define TEST_ASSERT_EQUAL_INT64(expected, actual)	TEST_ASSERT_EQUAL_I(int64_t, expected, actual, 0)
 
+#define TEST_ASSERT_EQUAL_UINT(expected, actual)	TEST_ASSERT_EQUAL_I(unsigned int, expected, actual, 0)
 #define TEST_ASSERT_EQUAL_UINT8(expected, actual)	TEST_ASSERT_EQUAL_I(uint8_t, expected, actual, 0)
 #define TEST_ASSERT_EQUAL_UINT16(expected, actual)	TEST_ASSERT_EQUAL_I(uint16_t, expected, actual, 0)
 #define TEST_ASSERT_EQUAL_UINT32(expected, actual)	TEST_ASSERT_EQUAL_I(uint32_t, expected, actual, 0)
@@ -158,11 +160,13 @@ extern void utest_set_user(void*);
 #define TEST_ASSERT_EQUAL_FLOAT(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(float, expected, actual, epsilon, 0)
 #define TEST_ASSERT_EQUAL_DOUBLE(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(double, expected, actual, epsilon, 0)
 
+#define TEST_ASSERT_EQUAL_INT_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(signed int, expected, actual, message)
 #define TEST_ASSERT_EQUAL_INT8_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int8_t, expected, actual, message)
 #define TEST_ASSERT_EQUAL_INT16_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int16_t, expected, actual, message)
 #define TEST_ASSERT_EQUAL_INT32_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int32_t, expected, actual, message)
 #define TEST_ASSERT_EQUAL_INT64_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(int64_t, expected, actual, message)
 
+#define TEST_ASSERT_EQUAL_UINT_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(unsigned int, expected, actual, message)
 #define TEST_ASSERT_EQUAL_UINT8_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(uint8_t, expected, actual, message)
 #define TEST_ASSERT_EQUAL_UINT16_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(uint16_t, expected, actual, message)
 #define TEST_ASSERT_EQUAL_UINT32_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_I(uint32_t, expected, actual, message)
