@@ -114,6 +114,7 @@ extern utest_test_result utest_run_test(utest_entry* test);
 
 // assert stuff
 extern void utest_assert_integer_equal(signed expected, signed actual, const char* message);
+extern void utest_assert_null(void* actual, char expect_null, const char* message);
 extern void utest_assert_float_equal(double expected, double actual, double epsilon, const char* message);
 extern void utest_assert_string_equal(const char* expected, const char* actual, const char* message, char ignore_case);
 extern void utest_assert_pointer_equal(void* expected, void* actual, const char* message);
@@ -156,6 +157,12 @@ extern void utest_set_user(void*);
 
 #define TEST_ASSERT_EQUAL_PTR(expected, actual)				TEST_ASSERT_EQUAL_P(expected, actual, 0)
 #define TEST_ASSERT_EQUAL_PTR_MESSAGE(expected, actual, message)	TEST_ASSERT_EQUAL_P(expected, actual, message)
+
+#define TEST_ASSERT_NULL(actual)		utest_assert_null(actual, 1, 0)
+#define TEST_ASSERT_NULL_MESSAGE(actual, message)		utest_assert_null(actual, 1, message)
+
+#define TEST_ASSERT_NOT_NULL(actual)		utest_assert_null(actual, 0, 0)
+#define TEST_ASSERT_NOT_NULL_MESSAGE(actual, message)		utest_assert_null(actual, 0, message)
 
 #define TEST_ASSERT_EQUAL_FLOAT(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(float, expected, actual, epsilon, 0)
 #define TEST_ASSERT_EQUAL_DOUBLE(expected, actual, epsilon)	TEST_ASSERT_EQUAL_F(double, expected, actual, epsilon, 0)
@@ -301,6 +308,42 @@ void utest_assert_integer_equal(signed expected, signed actual, const char* mess
 	{
 		utest_fail("Values not equal. Expected [%i], Actual [%i]", expected, actual);
 	}
+}
+
+void utest_assert_null(void* actual, char expect_null, const char* message)
+{
+	if (expect_null)
+	{
+		if(!actual)
+		{
+			return;
+		}
+
+		if (message)
+		{
+			utest_fail("Value non-null. Expected null. %s", message);
+		}
+		else
+		{
+			utest_fail("Value non-null. Expected null.");
+		}
+	}
+
+	// otherwise we're expecting null
+	if(actual)
+	{
+		return;
+	}
+
+	if (message)
+	{
+		utest_fail("Value null. Expected non-null. %s", message);
+	}
+	else
+	{
+		utest_fail("Value null. Expected non-null.");
+	}
+	
 }
 
 void utest_assert_float_equal(double expected, double actual, double epsilon, const char* message)
