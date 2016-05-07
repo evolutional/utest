@@ -56,6 +56,10 @@
 #define UTEST_MAX_TESTS_PER_FIXTURE	265
 #endif
 
+#ifndef UTEST_MSG_BUFFER_SIZE
+#define UTEST_MSG_BUFFER_SIZE	512
+#endif
+
 typedef void(*_utest_func)();
 
 typedef struct _utest_entry
@@ -94,6 +98,16 @@ typedef struct _utest_fixture
 	utest_entry tests[UTEST_MAX_TESTS_PER_FIXTURE];
 } utest_fixture;
 
+typedef enum _utest_test_result
+{
+	TEST_RESULT_SUCCESS = 0,
+	TEST_RESULT_FAILED = -1
+} utest_test_result;
+
+// handler called when a test completes (pass/fail)
+typedef void(*utest_result_func)(const utest_fixture*, const utest_entry*, utest_test_result result, const char*);
+typedef void(*utest_print_func)(const utest_entry*, const char*);
+
 typedef struct _utest_state
 {
 	void*	user_state;
@@ -103,23 +117,28 @@ typedef struct _utest_state
 	int fail_count;
 
 	// working state
+	utest_fixture* current_fixture;
 	utest_entry* current_test;
 	jmp_buf	restore_env;
 
+	char msgbuffer[UTEST_MSG_BUFFER_SIZE];
+
 } utest_state;
 
-
-typedef enum _utest_test_result
+typedef struct _utest_cfg
 {
-	TEST_RESULT_SUCCESS = 0,
-	TEST_RESULT_FAILED = -1,
-} utest_test_result;
+	utest_result_func result_func;
+	utest_print_func print_func;
+} utest_cfg;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern utest_test_result utest_run_fixture(utest_fixture fixture);
+extern void utest_init();
+
+extern utest_test_result utest_run_fixture(utest_fixture* fixture);
 extern utest_test_result utest_run_test(utest_entry* test);
 
 // assert stuff
@@ -131,10 +150,24 @@ extern void utest_assert_pointer_equal(void* expected, void* actual, const char*
 
 extern void utest_fail(const char* format, ...);
 
-extern utest_state g_utest_state;
 
+extern utest_state g_utest_state;
+extern utest_cfg g_utest_cfg;
+
+// Utility
 extern void* utest_get_user();
 extern void utest_set_user(void*);
+
+extern void utest_test_result_func(const utest_fixture* fixture, const utest_entry* test, utest_test_result result, const char* message);
+extern void utest_test_print_func(const utest_entry* test, const char* message);
+
+extern void utest_set_result_func(utest_result_func func);
+extern void utest_set_print_func(utest_print_func func);
+
+extern void utest_reset_result_func();
+extern void utest_reset_print_func();
+
+extern const char* utest_last_msg();
 
 #ifdef __cplusplus
 }
@@ -144,6 +177,11 @@ extern void utest_set_user(void*);
 // Assert helpers
 #define TEST_FAIL_MESSAGE(message)		utest_fail(message);
 #define TEST_FAIL						TEST_FAIL_MESSAGE(0)
+
+#define TEST_INCONCLUSIVE_MESSAGE(message)	utest_inconclusive(message);
+#define TEST_INCONCLUSIVE					TEST_INCONCLUSIVE_MESSAGE(0)
+
+#define TEST_MESSAGE(message)			utest_print(message);
 
 #define TEST_ASSERT_MESSAGE(expr, message)	if(!(expr)) { TEST_FAIL_MESSAGE(message); }
 
@@ -227,6 +265,12 @@ static utest_fixture fixture_name = { #fixture_name, fixture_setup, fixture_tear
 		} \
 	};
 
+#define TEST_RUN(test_name)	\
+	utest_run_test( &test_name )
+
+#define TEST_RUN_FIXTURE(fixture_name)	\
+	utest_run_fixture( &fixture_name )
+
 #endif
 
 #ifdef UTEST_C_IMPLEMENTATION
@@ -241,28 +285,36 @@ static utest_fixture fixture_name = { #fixture_name, fixture_setup, fixture_tear
 	longjmp(g_utest_state.restore_env, 1); \
 	return;
 
-#ifndef UTEST_MSG_BUFFER_SIZE
-#define UTEST_MSG_BUFFER_SIZE	512
-#endif
-
 // Global state
 static utest_state g_utest_state;
+static utest_cfg g_utest_cfg;
+
+void utest_init()
+{
+	memset(&g_utest_state, 0, sizeof(g_utest_state));
+	g_utest_cfg.result_func = &utest_test_result_func;
+	g_utest_cfg.print_func = &utest_test_print_func;
+}
 
 void utest_print(const char* message)
 {
-	printf("%s\r\n", message);
+	if (g_utest_cfg.print_func)
+	{
+		g_utest_cfg.print_func(g_utest_state.current_test, message);
+	}	
 }
 
-utest_test_result utest_run_fixture(utest_fixture fixture)
+utest_test_result utest_run_fixture(utest_fixture* fixture)
 {
-	utest_entry* test = fixture.tests;
+	utest_entry* test = fixture->tests;
 	g_utest_state.run_count = 0;
 	g_utest_state.pass_count = 0;
 	g_utest_state.fail_count = 0;
+	g_utest_state.current_fixture = fixture;
 
-	if (fixture.f_setup)
+	if (fixture->f_setup)
 	{
-		(*fixture.f_setup)();
+		(*fixture->f_setup)();
 	}
 
 	while (test->test)
@@ -270,31 +322,33 @@ utest_test_result utest_run_fixture(utest_fixture fixture)
 		g_utest_state.current_test = test;
 		g_utest_state.run_count++;
 
-		if (fixture.t_setup)
+		if (fixture->t_setup)
 		{
-			(*fixture.t_setup)();
+			(*fixture->t_setup)();
 		}
 
 		utest_test_result result = utest_run_test(test++);
 
-		if (fixture.t_teardown)
+		if (fixture->t_teardown)
 		{
-			(*fixture.t_teardown)();
+			(*fixture->t_teardown)();
 		}
 
 		if (!result)
 		{
 			g_utest_state.pass_count++;
+			g_utest_cfg.result_func(fixture, g_utest_state.current_test, result, 0);
 		}
 		else
 		{
 			g_utest_state.fail_count++;
+			g_utest_cfg.result_func(fixture, g_utest_state.current_test, result, g_utest_state.msgbuffer);
 		}
 	}
 
-	if (fixture.f_teardown)
+	if (fixture->f_teardown)
 	{
-		(*fixture.f_teardown)();
+		(*fixture->f_teardown)();
 	}
 
 	return g_utest_state.fail_count ? TEST_RESULT_FAILED : TEST_RESULT_SUCCESS;
@@ -308,13 +362,10 @@ utest_test_result utest_run_test(utest_entry* test)
 	if (result == 0)
 	{
 		// Run the test
-		(*test->test)();			
+		(*test->test)();
 		return TEST_RESULT_SUCCESS;
 	}
-	else
-	{		
-		return TEST_RESULT_FAILED;
-	}
+	return TEST_RESULT_FAILED;
 }
 
 //////////////////////////
@@ -435,22 +486,32 @@ void utest_assert_pointer_equal(void* expected, void* actual, const char* messag
 
 void utest_fail(const char* format, ...)
 {
-	char msgbuffer[UTEST_MSG_BUFFER_SIZE] = { 0 };
-
 	va_list args;
 	va_start(args, format);
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-	vsnprintf_s(msgbuffer, UTEST_MSG_BUFFER_SIZE, UTEST_MSG_BUFFER_SIZE, format, args);
+	vsnprintf_s(g_utest_state.msgbuffer, UTEST_MSG_BUFFER_SIZE, UTEST_MSG_BUFFER_SIZE, format, args);
 #else
-	vsprintf(msgbuffer, format, args);
+	vsprintf(g_utest_state.msgbuffer, format, args);
 #endif		
-	va_end(args);
-
-	printf("%s(%i): Test failed: '%s': %s\r\n", 
-		g_utest_state.current_test->file, g_utest_state.current_test->line,
-		g_utest_state.current_test->name, msgbuffer);
-
+	va_end(args);	
 	__UTEST_FAIL_TEST_EXIT();
+}
+
+void utest_test_result_func(const utest_fixture* fixture, const utest_entry* test, utest_test_result result, const char* message)
+{
+	if (result == TEST_RESULT_FAILED)
+	{
+		printf("%s(%i): Test failed: '%s': %s\r\n",
+			test->file, test->line,
+			test->name, message);
+	}
+}
+
+void utest_test_print_func(const utest_entry* test, const char* message)
+{
+	printf("%s(%i): '%s': %s\r\n",
+		test->file, test->line,
+		test->name, message);
 }
 
 void* utest_get_user()
@@ -462,4 +523,30 @@ void utest_set_user(void* state)
 {
 	g_utest_state.user_state = state;
 }
+
+void utest_set_result_func(utest_result_func func)
+{
+	g_utest_cfg.result_func = func;
+}
+
+void utest_set_print_func(utest_print_func func)
+{
+	g_utest_cfg.print_func = func;
+}
+
+void utest_reset_result_func()
+{
+	g_utest_cfg.result_func = utest_test_result_func;
+}
+
+void utest_reset_print_func()
+{
+	g_utest_cfg.print_func = utest_test_print_func;
+}
+
+const char* utest_last_msg()
+{
+	return g_utest_state.msgbuffer;
+}
+
 #endif // UTEST_C_IMPLEMENTATION

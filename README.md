@@ -13,8 +13,12 @@
 
 ## Usage ##
 
+Before executing a test, call:
 
-All tests must have the signature: 
+	utest_init();
+
+
+Specify tests as functions with the signature: 
 	`void [func_name](void)`
 
 A convenience macro `TEST` has been defined for quick definition of tests
@@ -26,11 +30,13 @@ eg:
 		// do nothing
 	 }
 
-Tests can be run individually via `utest_run_test()`
+Tests can be run individually via `TEST_RUN()`
 
 eg:
 	
-	int result = utest_run_test(my_test);
+	int result = TEST_RUN(my_test);
+
+A test fails if it returns a non-zero result. You can check the failure message by calling `utest_last_msg()`.
 
 
 ## Assertion ##
@@ -38,7 +44,10 @@ eg:
 µTest provides several simple assertion macros for use in tests.
 
 	// Fail the test
-	TEST_FAIL()		
+	TEST_FAIL()
+	
+	// Fail the test with a message		
+	TEST_FAIL_MESSAGE(message)
 
 	// Assert expr == true	
 	TEST_ASSERT(expr)
@@ -59,13 +68,15 @@ eg:
 	TEST_ASSERT_EQUAL_STRING(expected, actual)
 	TEST_ASSERT_EQUAL_NOCASE_STRING(expected, actual)
 
+	// Print an information message from this test (does not fail)
+	TEST_MESSAGE(message) 
 
-
+Note: The assert/fail macros do not raise asserts - instead they record the failure message and terminate the test.
 
 ## Fixtures ##
 
 
-Tests can be arranged into fixtures, using the macros below.
+Often groups of related tests will be arranged into fixtures, using the macros below.
 
 	TEST_FIXTURE_BEGIN(mytest_fixture)
 		TEST_FIXTURE_TEST(mytest_a)
@@ -73,11 +84,11 @@ Tests can be arranged into fixtures, using the macros below.
 		TEST_FIXTURE_TEST(mytest_c)
 	TEST_FIXTURE_END()
 
-Fixtures can be run by calling `utest_run_fixture()`
+Fixtures can be run by calling `TEST_RUN_FIXTURE()`
 
 eg:
 	
-	int result = utest_run_fixture(mytest_fixture);
+	int result = TEST_RUN_FIXTURE(mytest_fixture);
 
 
 Fixtures support per-test setup/teardown functions that are called before/after each test execution respectively.
@@ -163,13 +174,28 @@ Define `UTEST_MAX_TESTS_PER_FIXTURE` before including the header to change the n
 
 Define `UTEST_MSG_BUFFER_SIZE` to a different size if you need to change the size of the error message buffer.
 
+## Utility ##
+
+Use `utest_set_user(void*)` and `utest_get_user` to store and retrieve global data. This is useful for storing 
+data to be used in a test.
+
+You can hook the results of a test execution by passing a function with the signature `void(func)(const utest_fixture*, const utest_entry*, utest_result, const char*)`
+to `utest_set_result_func`. You will receive information about the test, its parent fixture, the execution status and the assert message if it failed.
+This is useful if you wish to embed µTest in your own application or test runner framework.
+
+Similarly, you can hook the results of a test `TEST_MESSAGE` by passing a function with the signature `void(func)(const utest_entry*, const char*)`
+to `utest_set_print_func`.
+
+## Caveats ##
+
+Tests execution is wrapped in [`setjmp`](http://en.cppreference.com/w/cpp/utility/program/setjmp) & [`longjmp`](http://en.cppreference.com/w/cpp/utility/program/longjmp). 
+As a result it can cause issues with stack unwinding and destructors in C++ (especially if you're using RAII). Be aware of the potential issues of
+this when writing tests and allocate any resources within test setup/teardown functions.
 
 ## Future ##
 
 Planned features (in no order):
 
-- Ensure C++ support
-- Custom error reporting (replace use of printf for output)
 - More assert macros
 - Usability improvements
 
