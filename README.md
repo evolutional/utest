@@ -1,6 +1,6 @@
 ## About ##
 
-µTest is an ultra-lightweight micro unit test framework for C99.
+µTest is an ultra-lightweight micro unit test framework for C99. It is the sister framework of [µTest for C++11](https://github.com/evolutional/upptest).
 
 
 ## Compiling ##
