@@ -4,29 +4,20 @@
 	Author - Oli Wilkinson (https://github.com/evolutional/utest)
  
 	This file provides both the interface and the implementation.
-
 	To provide the implementation for this library, you MUST define
 	UTEST_C_IMPLEMENTATION in exactly on source file.
-
 		#define UTEST_C_IMPLEMENTATION
 		#include "utest.h"
-
 	USAGE
 	-----
-
 	See README.md for details
-
-
 	LICENSE
 	-------
-
 	This is free and unencumbered software released into the public domain.
-
 	Anyone is free to copy, modify, publish, use, compile, sell, or
 	distribute this software, either in source code form or as a compiled
 	binary, for any purpose, commercial or non-commercial, and by any
 	means.
-
 	In jurisdictions that recognize copyright laws, the author or authors
 	of this software dedicate any and all copyright interest in the
 	software to the public domain. We make this dedication for the benefit
@@ -34,7 +25,6 @@
 	successors. We intend this dedication to be an overt act of
 	relinquishment in perpetuity of all present and future rights to this
 	software under copyright law.
-
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 	MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -42,7 +32,6 @@
 	OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 	ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 	OTHER DEALINGS IN THE SOFTWARE.
-
 	For more information, please refer to <http://unlicense.org>
  */
 
@@ -150,9 +139,10 @@ extern void utest_assert_pointer_equal(void* expected, void* actual, const char*
 
 extern void utest_fail(const char* format, ...);
 
-
+#ifndef UTEST_C_IMPLEMENTATION
 extern utest_state g_utest_state;
 extern utest_cfg g_utest_cfg;
+#endif
 
 // Utility
 extern void* utest_get_user();
@@ -239,10 +229,11 @@ extern const char* utest_last_msg();
 //////////////
 // Test specs
 #define TEST(test_name)	\
-	void test_name()
+	void test_name(void)
 
 #define DECLARE_TEST(test_name)	\
-	void test_name();
+	void test_name(void);\
+	static utest_entry test_name ## _test = { #test_name, test_name, __FILE__, __LINE__ }
 
 #define TEST_FIXTURE_BEGIN_A(fixture_name, fixture_setup, fixture_teardown, test_setup, test_teardown)	\
 static utest_fixture fixture_name = { #fixture_name, fixture_setup, fixture_teardown, test_setup, test_teardown, {
@@ -266,7 +257,7 @@ static utest_fixture fixture_name = { #fixture_name, fixture_setup, fixture_tear
 	};
 
 #define TEST_RUN(test_name)	\
-	utest_run_test( &test_name )
+	utest_run_test( &test_name ## _test )
 
 #define TEST_RUN_FIXTURE(fixture_name)	\
 	utest_run_fixture( &fixture_name )
@@ -358,7 +349,7 @@ utest_test_result utest_run_test(utest_entry* test)
 {
 	// Grab current environment
 	int result = setjmp(g_utest_state.restore_env);
-
+	g_utest_state.current_test = test;
 	if (result == 0)
 	{
 		// Run the test
