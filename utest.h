@@ -134,6 +134,7 @@ extern utest_test_result utest_run_test(utest_entry* test);
 extern void utest_assert_integer_equal(signed expected, signed actual, const char* message);
 extern void utest_assert_null(void* actual, char expect_null, const char* message);
 extern void utest_assert_float_equal(double expected, double actual, double epsilon, const char* message);
+extern void utest_assert_string_null(const char* actual, const char* message);
 extern void utest_assert_string_equal(const char* expected, const char* actual, const char* message, char ignore_case);
 extern void utest_assert_pointer_equal(void* expected, void* actual, const char* message);
 
@@ -225,6 +226,9 @@ extern const char* utest_last_msg();
 
 #define TEST_ASSERT_EQUAL_STRING_MESSAGE(expected, actual, message)		utest_assert_string_equal(expected, actual, message, 0)
 #define TEST_ASSERT_EQUAL_STRING(expected, actual)		TEST_ASSERT_EQUAL_STRING_MESSAGE(expected, actual, 0)
+
+#define TEST_ASSERT_NULL_STRING_MESSAGE(actual, message)		utest_assert_string_null(actual, message)
+#define TEST_ASSERT_NULL_STRING(actual)		TEST_ASSERT_NULL_STRING_MESSAGE(actual, 0)
 
 //////////////
 // Test specs
@@ -429,6 +433,23 @@ void utest_assert_float_equal(double expected, double actual, double epsilon, co
 	{
 		utest_fail("Values not equal. Expected [%lf], Actual [%lf]", expected, actual);
 	}
+}
+
+void utest_assert_string_null(const char* actual, const char* message)
+{
+    if (!actual)
+    {
+        return;
+    }
+
+    if (message)
+    {
+        utest_fail("String not null. Actual [%s] - %s", actual, message);
+    }
+    else
+    {
+        utest_fail("String not null. Actual [%s]", actual);
+    }
 }
 
 void utest_assert_string_equal(const char* expected, const char* actual, const char* message, char ignore_case)
